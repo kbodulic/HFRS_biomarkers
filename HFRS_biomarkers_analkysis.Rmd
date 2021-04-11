@@ -1,0 +1,480 @@
+```{r}
+library(data.table)
+library(tidyr)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(cowplot)
+library(corrplot)
+library(ggnewscale)
+library(leaps)
+library(glmnet)
+library(lmvar)
+setwd("C:/Users/krist/Desktop/BFM/hanta")
+patients_dataset<-fread("hfrs_data_patients.csv",encoding="UTF-8")[1:28,]
+
+patients_dataset[,`Max. serum RBC (*10^12/L)`:=as.character(str_extract(`Serum RBC (*10^12/L)`,".*(?=\\-)"))]
+
+colsToConvert<-colnames(patients_dataset)[c(-3,-8,-9)]
+patients_dataset[, (colsToConvert) := lapply(.SD, function(x) { as.numeric(gsub(",", ".", x))}), .SDcols = colsToConvert]
+
+
+healthy_control_dataset<-fread("hfrs_data_healthy_control.csv")
+
+ 
+colsToConvert<-colnames(healthy_control_dataset)[-1]
+healthy_control_dataset[, (colsToConvert) := lapply(.SD, function(x) { as.numeric(gsub(",", ".", x))}), .SDcols = colsToConvert]
+
+patients_dataset
+
+patients_dataset_longer<-melt(data=patients_dataset,measure.vars = colnames(patients_dataset[,.SD,.SDcols=grep("First|Second",colnames(patients_dataset))]),variable.name = "biomarker_category",value.name = "biomarker_value")
+
+
+patients_dataset_longer[grepl("NT-proBNP",biomarker_category),biomarker:="NT-proBNP"]
+patients_dataset_longer[grepl("lipocalin",biomarker_category),biomarker:="Lipocalin-2"]
+patients_dataset_longer[grepl("endothelin",biomarker_category),biomarker:="Endothelin-1"]
+
+patients_dataset_longer[grepl("serum",biomarker_category),category:="Serum"]
+patients_dataset_longer[grepl("urine",biomarker_category),category:="Urine"]
+
+patients_dataset_longer[grepl("First",biomarker_category),time:="First"]
+patients_dataset_longer[grepl("Second",biomarker_category),time:="Second"]
+
+
+healthy_control_dataset_longer<-melt(data=healthy_control_dataset,measure.vars = colnames(healthy_control_dataset)[-1],variable.name = "biomarker_category",value.name = "biomarker_value")
+
+healthy_control_dataset_longer[grepl("NT-proBNP",biomarker_category),biomarker:="NT-proBNP"]
+healthy_control_dataset_longer[grepl("lipocalin",biomarker_category),biomarker:="Lipocalin-2"]
+healthy_control_dataset_longer[grepl("endothelin",biomarker_category),biomarker:="Endothelin-1"]
+
+healthy_control_dataset_longer[grepl("Serum",biomarker_category),category:="Serum"]
+healthy_control_dataset_longer[grepl("Urine",biomarker_category),category:="Urine"]
+
+healthy_control_dataset_longer[,time:="Control"]
+
+healthy_control_dataset_longer<-healthy_control_dataset_longer[,-1]
+patients_dataset_longer<-patients_dataset_longer[,.SD,.SDcols=colnames(healthy_control_dataset_longer)]
+
+
+
+whole_dataset_longer<-rbind(patients_dataset_longer,healthy_control_dataset_longer)
+
+whole_dataset_longer[,time:=factor(time,levels=c("First","Second","Control"))]
+
+my_comparisons <- list( c("First", "Second"), c("First", "Control"), c("Second", "Control"))
+
+#Lipocalin-2
+
+healthy_control_dataset_longer_lipocalin<-whole_dataset_longer[biomarker=="Lipocalin-2"]
+
+
+
+lipocalin_boxplot<-ggplot(healthy_control_dataset_longer_lipocalin,aes(x=time,y=biomarker_value,fill=time)) +
+geom_boxplot(alpha=0.4,color="black",outlier.shape = NA) +
+theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(col=vars(category)) +
+  geom_point(shape=16, position=position_jitter(0.2)) +
+  aes(color=time) +
+  scale_fill_brewer(palette = "Dark2",direction = -1) +
+  scale_color_brewer(palette = "Dark2",direction = -1) +
+  theme(axis.title.x=element_blank()) +
+  labs(y=parse(text='Concentration / ngmL^-1')) +
+  ggtitle("Lipocalin-2 levels") +
+  theme(plot.title = element_text(hjust=0.5,size=11)) +
+     stat_compare_means(comparisons = my_comparisons, label.y = c(310, 340, 290),label = "p.signif") +
+  ylim(c(0,350)) +
+  theme(axis.title.y = element_text(size=9)) 
+
+lipocalin_boxplot
+
+ggsave(lipocalin_boxplot,filename = "lipocalin_boxplot.png",height = 4,width = 6)
+
+lipocalin_boxplot
+
+ggsave(lipocalin_boxplot,filename = "lipocalin_boxplot.png",height = 4,width = 6)
+
+
+#Endothelin-1
+
+healthy_control_dataset_longer_endothelin<-whole_dataset_longer[biomarker=="Endothelin-1"]
+
+endothelin_boxplot<-ggplot(healthy_control_dataset_longer_endothelin,aes(x=time,y=biomarker_value,fill=time)) +
+geom_boxplot(alpha=0.5,color="black",outlier.shape = NA) +
+theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(col=vars(category)) +
+  geom_point(shape=16, position=position_jitter(0.2)) +
+  aes(color=time) +
+  theme(axis.title.x=element_blank()) +
+  labs(y=parse(text='Concentration / pgmL^-1'))+ 
+  ggtitle("Endothelin-1 levels") +
+  theme(plot.title = element_text(hjust=0.5,size=11)) +
+    scale_fill_brewer(palette = "Dark2",direction = -1) +
+  scale_color_brewer(palette = "Dark2",direction = -1) +
+   stat_compare_means(comparisons = my_comparisons, label.y = c(12.2, 13.5, 11.8),label = "p.signif") +
+  theme(axis.title.y = element_text(size=9)) +
+  ylim(c(0,13.8))
+
+
+endothelin_boxplot
+
+
+ggsave(endothelin_boxplot,filename = "endothelin_boxplot.png",height = 4,width = 6)
+
+#NT-proBNP
+
+healthy_control_dataset_longer_NTproBNP<-whole_dataset_longer[biomarker=="NT-proBNP"]
+
+proBNP_serum_boxplot<-ggplot(healthy_control_dataset_longer_NTproBNP,aes(x=time,y=biomarker_value,fill=time)) +
+geom_boxplot(alpha=0.5,color="black",outlier.shape = NA,width=0.6) +
+theme_bw() +
+  theme(legend.position = "none") +
+  geom_point(shape=16, position=position_jitter(0.2)) +
+  aes(color=time) +
+  theme(axis.title.x=element_blank()) +
+  labs(y=parse(text='Concentration / ngL^-1')) + 
+  ggtitle("NT-proBNP serum levels") +
+  theme(plot.title = element_text(hjust=0.5,size=11)) +
+    scale_fill_brewer(palette = "Dark2",direction = -1) +
+  scale_color_brewer(palette = "Dark2",direction = -1)  +
+       stat_compare_means(comparisons = my_comparisons, label.y = c(3200, 3500, 3000),label = "p.signif") +
+  theme(axis.title.y = element_text(size=9)) +
+  ylim(c(0,3600))
+  
+    
+proBNP_serum_boxplot
+
+ggsave(proBNP_serum_boxplot,filename = "proBNP_serum_boxplot.png",height = 4,width = 6)
+
+
+#FIGURE 1
+
+plots_combined<-plot_grid(lipocalin_boxplot, endothelin_boxplot, proBNP_serum_boxplot, labels=c("(A)", "(B)","(C)"), ncol = 1, nrow = 3,align = "hv",rel_widths   = c(2,2,2),scale = c(1,1,0.75))
+
+ ggsave(plots_combined,filename = "plots_combined.png",height = 9,width = 8)
+ 
+ 
+patients_dataset_num<-patients_dataset[,.SD,.SDcols=c("Patient ID","Age","Length of hospitalization (days)","First serum NT-proBNP (ng/L)","Second serum NT-proBNP (ng/L)","First urine NT-proBNP (ng/L)","First serum endothelin-1 (pg/mL)","Second serum endothelin-1 (pg/mL)","First urine endothelin-1 (pg/mL)","Second urine endothelin-1 (pg/mL)","First serum lipocalin-2 (ng/mL)","Second serum lipocalin-2 (ng/mL)","First urine lipocalin-2 (ng/mL)","Second urine lipocalin-2 (ng/mL)","Max. serum RBC (*10^12/L)","Max. sedimentation rate (mm/h)","Min. platelet count (10^9/L)","Max. serum WBC (*10^9/L)","Max. CRP (mg/L)","Max. creatinine (umol/L)","Max. urea (mmol/L)","Min. urine volume (mL/day)","Max. urine RBC (RBC/HPF)","Max. urine WBC (RBC/HPF)","Proteinuria","Max. ALT (U/L)","Max. ALT (U/L)","Max. GGT (U/L)")]
+
+
+
+setnames(patients_dataset_num,c("Patient ID","Age","Hospitalization length","First serum NT-proBNP","Second serum NT-proBNP","First urine NT-proBNP","First serum endothelin-1","Second serum endothelin-1","First urine endothelin-1","Second urine endothelin-1","First serum lipocalin-2","Second serum lipocalin-2","First urine lipocalin-2","Second urine lipocalin-2","Max. serum RBC ","Max. sedimentation rate","Min. platelet count","Max. serum WBC","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC ","Max. urine WBC","Proteinuria","Max. AST","Max. ALT","Max. GGT"))
+
+
+cor_matrix_hosp<-cor(patients_dataset_num[,-1],use = "complete.obs",method="spearman")
+col<- colorRampPalette(c("steelblue", "white", "indianred2"))(20)
+
+
+
+cor.mtest <- function(mat, ...) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+        for (j in (i + 1):n) {
+            tmp <- cor.test(mat[, i], mat[, j], ...)
+            p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+        }
+    }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
+}
+
+#Correlation test results: p-value matrix
+
+p.mat_two <- cor.mtest(patients_dataset_num[,-1],use = "complete.obs",method="spearman")
+
+
+
+pval_adj_all<-p.adjust(p.mat_two,method = "BH")
+
+p.mat<-matrix(pval_adj_all,nrow=27,ncol=27)
+rownames(p.mat)<-rownames(p.mat_two)
+colnames(p.mat)<-colnames(p.mat_two)
+
+colnames(p.mat)
+
+#FIGURE 2
+
+pdf(file = "corr_matrix_clin.pdf")
+corrplot(cor_matrix_hosp, method="color",tl.col="black", tl.cex = 0.6,tl.srt=45,diag=F,number.cex = 0.4,addCoef.col = "grey20",col=col,p.mat = p.mat,insig="blank",type="upper")
+
+dev.off()
+
+
+patients_dataset_num$`Second serum NT-proBNP`<-NULL
+patients_dataset_num$`Second serum endothelin-1`<-NULL
+patients_dataset_num$`Second serum lipocalin-2`<-NULL
+patients_dataset_num$`Second urine endothelin-1`<-NULL
+patients_dataset_num$`Second urine lipocalin-2`<-NULL
+patients_dataset_num$`Max. ALT`<-NULL
+patients_dataset_num$`Max. GGT`<-NULL
+
+patients_dataset_num_longer<-melt(data=patients_dataset_num,measure.vars =  c("Hospitalization length","Max. serum RBC ","Max. sedimentation rate","Min. platelet count","Max. serum WBC","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC ","Max. urine WBC","Proteinuria"),variable.name = "category",value.name = "category_value" )
+
+
+patients_dataset_num_longer2<-melt(data=patients_dataset_num_longer,measure.vars=c("First serum NT-proBNP","First urine NT-proBNP","First serum endothelin-1","First urine endothelin-1","First serum lipocalin-2","First urine lipocalin-2"),variable.name="biomarker",value.name = "biomarker_value")
+
+
+patients_dataset_num_longer2<-merge(patients_dataset_num_longer2,patients_dataset[,.SD,.SDcols=c("Patient ID","Disease severity")])
+patients_dataset_num_longer2[,category:=factor(category,levels = c("Hospitalization length","Max. serum RBC ","Min. platelet count","Max. sedimentation rate","Max. serum WBC","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC ","Max. urine WBC","Proteinuria"))]
+
+patients_dataset_num_longer2[,biomarker:=factor(biomarker,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
+patients_dataset_num_longer2[,category_value:=log(category_value+0.1)]
+patients_dataset_num_longer2[,biomarker_value:=log(biomarker_value+0.1)]
+patients_dataset_num_longer2[,cate:=paste(category,biomarker,sep="_")]
+
+
+#SUPPLEMENTARY FIGURE 1
+patients_dataset_num_longer2[,`Disease severity`:=factor(`Disease severity`,levels=c("1","2","3"))]
+corr_facet<-ggplot(data=patients_dataset_num_longer2,aes(x=category_value,y=biomarker_value)) +
+  geom_smooth(method = "lm",size=0.75,se=F,aes(color=cate)) +
+  scale_color_manual(values=c("black","black","black","black","black","black","black","dodgerblue","black","black","black","black","black",rep("black",5),"black","black","black","dodgerblue","black","black","dodgerblue","dodgerblue","black","black","black","dodgerblue",rep("black",6),"black","black","black","black","dodgerblue","dodgerblue","black","dodgerblue","black","black","black","black",rep("black",6),"black","black","black","black","dodgerblue","dodgerblue",rep("black",6),rep("black",6))) +
+  new_scale_color() +
+  geom_point(data=patients_dataset_num_longer2,size=1.8,aes(color=`Disease severity`)) +
+  theme_bw() +
+  facet_grid(biomarker~category,scales="free") +
+  theme(legend.position = "none") +
+  scale_color_brewer(palette = "YlOrRd",name="Disease severity",labels=c("Mild","Intermediate","Severe")) +
+  theme(axis.title = element_blank())+
+  theme(axis.text = element_blank())
+
+corr_facet
+
+ggsave(corr_facet,filename = "corr2_facet.png",width = 17,height = 10)
+
+
+all_bio_first<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("First",colnames(patients_dataset),value = T)]))
+
+
+new_vec<-c()
+for(i in 1:nrow(patients_dataset)) {
+  new_vec<-c(new_vec,all_bio_first[i],all_bio_first[i+nrow(patients_dataset)],all_bio_first[i+2*nrow(patients_dataset)],all_bio_first[i+3*nrow(patients_dataset)],all_bio_first[i+4*nrow(patients_dataset)],all_bio_first[i+5*nrow(patients_dataset)])
+}
+
+
+patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("First serum NT-proBNP",nrow(patients_dataset)*6),rep("First urine NT-proBNP",nrow(patients_dataset)*6),rep("First serum endothelin-1",nrow(patients_dataset)*6),rep("First urine endothelin-1",nrow(patients_dataset)*6),rep("First serum lipocalin-2",nrow(patients_dataset)*6),rep("First urine lipocalin-2",nrow(patients_dataset)*6)),biomarker_2=rep(c("First serum NT-proBNP","First urine NT-proBNP","First serum endothelin-1","First urine endothelin-1","First serum lipocalin-2","First urine lipocalin-2"),nrow(patients_dataset)*6),value_1=rep(all_bio_first,1,each=6),value_2=rep(new_vec,6))
+patients_dataset_num_longer_bio[,value_1:=log(value_1+1)]
+patients_dataset_num_longer_bio[,value_2:=log(value_2+1)]
+
+patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
+patients_dataset_num_longer_bio[,cate:=paste(biomarker_1,biomarker_2)]
+
+#SUPPLEMENTARY FIGURE 2
+
+corr_bio<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
+  geom_point(size=1.8,color="grey70") +
+  theme_bw() +
+  facet_grid(biomarker_2~biomarker_1,scales="free") +
+  geom_smooth(method = "lm",aes(x=value_1,y=value_2,color=cate),size=0.75,se=F) +
+  theme(legend.position = "none") +
+  scale_color_manual(values=c("indianred3","black","black","black","black","black","indianred3","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
+  theme(axis.title = element_blank())+
+  theme(axis.text = element_blank())
+
+corr_bio
+
+ggsave(corr_bio,filename = "corr_bio.png",width = 11,height = 9)
+
+
+all_bio_second<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("Second",colnames(patients_dataset),value = T)]))
+
+
+new_vec<-c()
+for(i in 1:nrow(patients_dataset)) {
+  new_vec<-c(new_vec,all_bio_second[i],all_bio_second[i+nrow(patients_dataset)],all_bio_second[i+2*nrow(patients_dataset)],all_bio_second[i+3*nrow(patients_dataset)],all_bio_second[i+4*nrow(patients_dataset)])
+}
+
+
+patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("Second serum NT-proBNP",nrow(patients_dataset)*5),rep("Second serum endothelin-1",nrow(patients_dataset)*5),rep("Second urine endothelin-1",nrow(patients_dataset)*5),rep("Second serum lipocalin-2",nrow(patients_dataset)*5),rep("Second urine lipocalin-2",nrow(patients_dataset)*5)),biomarker_2=rep(c("Second serum NT-proBNP","Second serum endothelin-1","Second urine endothelin-1","Second serum lipocalin-2","Second urine lipocalin-2"),nrow(patients_dataset)*5),value_1=rep(all_bio_second,1,each=5),value_2=rep(new_vec,5))
+patients_dataset_num_longer_bio[,value_1:=log(value_1+1)]
+patients_dataset_num_longer_bio[,value_2:=log(value_2+1)]
+
+patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("Second serum NT-proBNP","Second serum lipocalin-2","Second urine lipocalin-2","Second serum endothelin-1","Second urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("Second serum NT-proBNP","Second serum lipocalin-2","Second urine lipocalin-2","Second serum endothelin-1","Second urine endothelin-1"))]
+patients_dataset_num_longer_bio[,cat:=paste(biomarker_1,biomarker_2)]
+
+
+#SUPPLEMENTARY FIGURE 3
+
+corr_bio2<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
+  geom_point(size=1.8,color="grey70") +
+  theme_bw() +
+  facet_grid(biomarker_2~biomarker_1,scales="free") +
+  geom_smooth(method = "lm",color="black",size=0.75,se=F) +
+  theme(axis.title = element_blank())+
+  theme(axis.text = element_blank())
+
+corr_bio2
+
+ggsave(corr_bio2,filename = "corr2_bio.png",width = 11,height = 9)
+
+
+
+patients_dataset_num_cp<-cbind(patients_dataset_num,patients_dataset$Gender,patients_dataset$Hypotension,patients_dataset$`ECG abnormalities`)
+
+
+
+patients_dataset_num_cp[,2:21]<-log(patients_dataset_num_cp[,2:21]+1)
+patients_dataset_num_cp<-patients_dataset_num_cp[is.na(`First serum lipocalin-2`)==F]
+#Multiple linear regression - hospitalization length
+linear_model_hosp<-regsubsets(`Hospitalization length`~.,data=patients_dataset_num_cp[,c(-1,-16,-17,-18)],nvmax = 15)
+
+res.sum_hosp <- summary(linear_model_hosp)
+data.frame(
+  Adj.R2 = which.max(res.sum_hosp$adjr2),
+  CP = which.min(res.sum_hosp $cp),
+  BIC = which.min(res.sum_hosp$bic)
+)
+
+linear_model_hosp_sub_seven<-lm(`Hospitalization length`~`First serum NT-proBNP`+`First serum endothelin-1`+`Max. serum RBC `+`Max. sedimentation rate`+`Max. serum WBC`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
+
+summary(linear_model_hosp_sub_seven)
+
+#Methodology for choosing the best model - only the best model is shown
+
+x_hosp_seven<-model.matrix(`Hospitalization length`~`First serum NT-proBNP`+`First serum endothelin-1`+`Max. serum RBC `+`Max. sedimentation rate`+`Min. platelet count`+`Max. serum WBC`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
+y_hosp_seven<-patients_dataset_num_cp$`Hospitalization length`
+
+linear_model_hosp_sub_seven$x<-x_hosp_seven
+linear_model_hosp_sub_seven$y<-y_hosp_seven
+
+
+
+hosp_seven_cv<-mean(replicate(100,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
+
+
+
+#Multiple linear regression - serum creatinine
+
+
+
+linear_model_chreatinine<-regsubsets(`Max. creatinine`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
+
+
+res.sum_ch <- summary(linear_model_chreatinine)
+data.frame(
+  Adj.R2 = which.max(res.sum_ch$adjr2),
+  CP = which.min(res.sum_ch$cp),
+  BIC = which.min(res.sum_ch$bic)
+)
+
+
+
+linear_model_chreatinine_sub_five<-lm(`Max. creatinine`~`Max. serum RBC `+`First serum lipocalin-2`+`Max. sedimentation rate`+`First urine lipocalin-2` + `Max. urine WBC` ,data=patients_dataset_num_cp)
+
+summary(linear_model_chreatinine_sub_five)
+
+
+#Methodology for choosing the best model - only the best model is shown
+
+x_chr_five<-model.matrix(`Max. creatinine`~`Max. serum RBC `+`First serum lipocalin-2`+`Max. sedimentation rate`+`First urine lipocalin-2` + `Max. urine WBC`,data=patients_dataset_num_cp)
+y_chr_five<-patients_dataset_num_cp$`Max. creatinine`
+
+linear_model_chreatinine_sub_five$x<-x_chr_five
+linear_model_chreatinine_sub_five$y<-y_chr_five
+
+
+
+chr_five_cv<-mean(replicate(5,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
+
+
+#Multiple linear regression - urine NT-proBNP
+
+linear_model_NT_proBNP<-regsubsets(`First urine NT-proBNP`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
+
+
+res.sum_NT_proBNP <- summary(linear_model_NT_proBNP)
+data.frame(
+  Adj.R2 = which.max(res.sum_NT_proBNP$adjr2),
+  CP = which.min(res.sum_NT_proBNP$cp),
+  BIC = which.min(res.sum_NT_proBNP$bic)
+)
+
+
+
+linear_model_NT_proBNP_sub_four<-lm(`First urine NT-proBNP`~`First serum NT-proBNP`+`First urine lipocalin-2`+`Max. serum RBC `+`Max. serum WBC`,data=patients_dataset_num_cp)
+
+summary(linear_model_NT_proBNP_sub_four)
+
+#Methodology for choosing the best model - only the best model is shown
+
+x_NT_proBNP_four<-model.matrix(`First urine NT-proBNP`~`First serum NT-proBNP`+`First urine lipocalin-2`+`Max. serum RBC `+`Max. serum WBC`,data=patients_dataset_num_cp)
+y_NT_proBNP_four<-patients_dataset_num_cp$`First urine NT-proBNP`
+
+linear_model_NT_proBNP_sub_four$x<-x_NT_proBNP_four
+linear_model_NT_proBNP_sub_four$y<-y_NT_proBNP_four
+
+
+
+pro_four_cv<-mean(replicate(100,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
+
+#Multiple linear regression - urine lipocalin-2
+
+
+linear_model_lipocalin_2<-regsubsets(`First urine lipocalin-2`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 20)
+
+
+res.sum_lipo <- summary(linear_model_lipocalin_2)
+data.frame(
+  Adj.R2 = which.max(res.sum_lipo$adjr2),
+  CP = which.min(res.sum_lipo$cp),
+  BIC = which.min(res.sum_lipo$bic)
+)
+
+
+
+linear_model_lipo_sub_five<-lm(`First urine lipocalin-2`~`First serum NT-proBNP`+`First urine NT-proBNP`+`Max. serum WBC` +`Max. creatinine`+`Max. urine WBC`,data=patients_dataset_num_cp)
+
+summary(linear_model_lipo_sub_five)
+
+#Methodology for choosing the best model - only the best model is shown
+
+x_lipo_five<-model.matrix(`First urine lipocalin-2`~`First serum NT-proBNP`+`First urine NT-proBNP`+`Max. serum WBC` +`Max. creatinine`+`Max. urine WBC`,data=patients_dataset_num_cp)
+y_lipo_five<-patients_dataset_num_cp$`First urine lipocalin-2`
+
+linear_model_lipo_sub_five$x<-x_lipo_five
+linear_model_lipo_sub_five$y<-y_lipo_five
+
+
+lipo_five_cv<-mean(replicate(100,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
+
+#Multiple linear regression - urine endothelin-1
+
+
+
+linear_model_endothelin<-regsubsets(`First urine endothelin-1`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
+
+
+res.sum_endo <- summary(linear_model_endothelin)
+data.frame(
+  Adj.R2 = which.max(res.sum_endo$adjr2),
+  CP = which.min(res.sum_endo$cp),
+  BIC = which.min(res.sum_endo$bic)
+)
+
+
+linear_model_endo_sub_two<-lm(`First urine endothelin-1`~`Max. sedimentation rate`+`First urine lipocalin-2`,data=patients_dataset_num_cp)
+
+summary(linear_model_endo_sub_two)
+
+#Methodology for choosing the best model - only the best model is shown
+
+x_endo_two<-model.matrix(`First urine endothelin-1`~`Max. sedimentation rate`+`First urine lipocalin-2`,data=patients_dataset_num_cp)
+y_endo_two<-patients_dataset_num_cp$`First urine endothelin-1`
+
+linear_model_endo_sub_two$x<-x_endo_two
+linear_model_endo_sub_two$y<-y_endo_two
+
+
+
+endo_two_cv<-mean(replicate(100,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
+
+
+```
+
+ 
