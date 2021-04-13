@@ -2,14 +2,12 @@
 library(data.table)
 library(tidyr)
 library(stringr)
-library(dplyr)
 library(ggplot2)
 library(ggpubr)
 library(cowplot)
 library(corrplot)
 library(ggnewscale)
 library(leaps)
-library(glmnet)
 library(lmvar)
 setwd("C:/Users/krist/Desktop/BFM/hanta")
 patients_dataset<-fread("HFRS_data_patients.csv",encoding="UTF-8")[1:28,]
@@ -240,7 +238,7 @@ corr_bio<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
   facet_grid(biomarker_2~biomarker_1,scales="free") +
   geom_smooth(method = "lm",aes(x=value_1,y=value_2,color=cate),size=0.75,se=F) +
   theme(legend.position = "none") +
-  scale_color_manual(values=c("indianred3","black","black","black","black","black","indianred3","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
+  scale_color_manual(values=c("indianred3","black","black","black","black","black","black","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
   theme(axis.title = element_blank())+
   theme(axis.text = element_blank())
 
@@ -304,7 +302,7 @@ patients_dataset_num_longer2[,cate:=paste(category,biomarker,sep="_")]
 patients_dataset_num_longer2[,`Disease severity`:=factor(`Disease severity`,levels=c("1","2","3"))]
 corr_facet<-ggplot(data=patients_dataset_num_longer2,aes(x=category_value,y=biomarker_value)) +
   geom_smooth(method = "lm",size=0.75,se=F,aes(color=cate)) +
-  scale_color_manual(values=c("black","black","black","black","black","black","black","dodgerblue","black","black","black","black","black",rep("black",5),"black","black","black","dodgerblue","black","black","dodgerblue","dodgerblue","black","black","black","dodgerblue",rep("black",6),"black","black","black","black","dodgerblue","dodgerblue","black","dodgerblue","black","black","black","black",rep("black",6),"black","black","black","black","dodgerblue","dodgerblue",rep("black",6),rep("black",6))) +
+  scale_color_manual(values=c("black","black","black","black","black","black","black","dodgerblue","black","black","black","black","black",rep("black",5),"black","black","black","dodgerblue","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","dodgerblue","black","black","dodgerblue","black","black","black","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue",rep("black",6))) +
   new_scale_color() +
   geom_point(data=patients_dataset_num_longer2,size=1.8,aes(color=`Disease severity`)) +
   theme_bw() +
