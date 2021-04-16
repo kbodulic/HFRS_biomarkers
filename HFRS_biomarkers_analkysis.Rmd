@@ -29,7 +29,7 @@ healthy_control_dataset[, (colsToConvert) := lapply(.SD, function(x) { as.numeri
 
 patients_dataset
 
-patients_dataset_longer<-melt(data=patients_dataset,measure.vars = colnames(patients_dataset[,.SD,.SDcols=grep("First|Second",colnames(patients_dataset))]),variable.name = "biomarker_category",value.name = "biomarker_value")
+patients_dataset_longer<-melt(data=patients_dataset,measure.vars = colnames(patients_dataset[,.SD,.SDcols=grep("Acute-phase|Convalescent-phase",colnames(patients_dataset))]),variable.name = "biomarker_category",value.name = "biomarker_value")
 
 
 patients_dataset_longer[grepl("NT-proBNP",biomarker_category),biomarker:="NT-proBNP"]
@@ -39,8 +39,8 @@ patients_dataset_longer[grepl("endothelin",biomarker_category),biomarker:="Endot
 patients_dataset_longer[grepl("serum",biomarker_category),category:="Serum"]
 patients_dataset_longer[grepl("urine",biomarker_category),category:="Urine"]
 
-patients_dataset_longer[grepl("First",biomarker_category),time:="First"]
-patients_dataset_longer[grepl("Second",biomarker_category),time:="Second"]
+patients_dataset_longer[grepl("Acute-phase",biomarker_category),time:="Acute-phase"]
+patients_dataset_longer[grepl("Convalescent-phase",biomarker_category),time:="Convalescent-phase"]
 
 
 healthy_control_dataset_longer<-melt(data=healthy_control_dataset,measure.vars = colnames(healthy_control_dataset)[-1],variable.name = "biomarker_category",value.name = "biomarker_value")
@@ -61,9 +61,9 @@ patients_dataset_longer<-patients_dataset_longer[,.SD,.SDcols=colnames(healthy_c
 
 whole_dataset_longer<-rbind(patients_dataset_longer,healthy_control_dataset_longer)
 
-whole_dataset_longer[,time:=factor(time,levels=c("First","Second","Control"))]
+whole_dataset_longer[,time:=factor(time,levels=c("Acute-phase","Convalescent-phase","Control"))]
 
-my_comparisons <- list( c("First", "Second"), c("First", "Control"), c("Second", "Control"))
+my_comparisons <- list( c("Acute-phase", "Convalescent-phase"), c("Acute-phase", "Control"), c("Convalescent-phase", "Control"))
 
 #Lipocalin-2
 
@@ -164,9 +164,9 @@ my_comparisons <- list( c("Serum","Urine"))
 
 #Lipocalin-2 serum-urine comparison
 
-whole_dataset_longer_first_lipo<-whole_dataset_longer[biomarker=="Lipocalin-2" & time=="First"]
+whole_dataset_longer_Acute_phase_lipo<-whole_dataset_longer[biomarker=="Lipocalin-2" & time=="Acute-phase"]
 
-lipo_serum_urine<-ggplot(data=whole_dataset_longer_first_lipo,aes(x=category,y=biomarker_value)) +
+lipo_serum_urine<-ggplot(data=whole_dataset_longer_Acute_phase_lipo,aes(x=category,y=biomarker_value)) +
   geom_boxplot(width=0.5,fill="lightsalmon",alpha=0.6, color="black",outlier.shape = NA) +
   theme_bw() +
     geom_point(shape=16, color="lightsalmon", position=position_jitter(0.2)) +
@@ -184,9 +184,9 @@ ggsave(lipo_serum_urine,filename = "lipo_serum_urine.png",height = 4,width = 6)
 
 #Endothelin-1 serum-urine comparison
 
-whole_dataset_longer_first_endo<-whole_dataset_longer[biomarker=="Endothelin-1" & time=="First"]
+whole_dataset_longer_Acute_phase_endo<-whole_dataset_longer[biomarker=="Endothelin-1" & time=="Acute-phase"]
 
-endo_serum_urine<-ggplot(data=whole_dataset_longer_first_endo,aes(x=category,y=biomarker_value)) +
+endo_serum_urine<-ggplot(data=whole_dataset_longer_Acute_phase_endo,aes(x=category,y=biomarker_value)) +
   geom_boxplot(width=0.5,fill="indianred3",alpha=0.6, color="black",outlier.shape = NA) +
   theme_bw() +
     geom_point(shape=16, color="indianred3", position=position_jitter(0.2)) +
@@ -205,9 +205,9 @@ ggsave(endo_serum_urine,filename = "endo_serum_urine.png",height = 4,width = 6)
 
 #NT-proBNP serum-urine comparison
 
-whole_dataset_longer_first_probnp<-whole_dataset_longer[biomarker=="NT-proBNP" & time=="First"]
+whole_dataset_longer_Acute_phase_probnp<-whole_dataset_longer[biomarker=="NT-proBNP" & time=="Acute-phase"]
 
-probnp_serum_urine<-ggplot(data=whole_dataset_longer_first_probnp,aes(x=category,y=biomarker_value)) +
+probnp_serum_urine<-ggplot(data=whole_dataset_longer_Acute_phase_probnp,aes(x=category,y=biomarker_value)) +
   geom_boxplot(width=0.5,fill="goldenrod1",alpha=0.4, color="black",outlier.shape = NA) +
   theme_bw() +
     geom_point(shape=16, color="goldenrod1", position=position_jitter(0.2)) +
@@ -229,7 +229,7 @@ plots_combined2<-plot_grid(probnp_serum_urine, lipo_serum_urine, endo_serum_urin
 
  ggsave(plots_combined2,filename = "plots_combined2.png",height = 3,width = 6)
  
-patients_dataset_num<-patients_dataset[,.SD,.SDcols=c("Patient ID","Age","Length of hospitalization (days)","First serum NT-proBNP (ng/L)","Second serum NT-proBNP (ng/L)","First urine NT-proBNP (ng/L)","First serum endothelin-1 (pg/mL)","Second serum endothelin-1 (pg/mL)","First urine endothelin-1 (pg/mL)","Second urine endothelin-1 (pg/mL)","First serum lipocalin-2 (ng/mL)","Second serum lipocalin-2 (ng/mL)","First urine lipocalin-2 (ng/mL)","Second urine lipocalin-2 (ng/mL)","Max. serum RBC count (*10^12/L)","Max. sedimentation rate (mm/h)","Min. platelet count (10^9/L)","Max. serum WBC count (*10^9/L)","Max. CRP (mg/L)","Max. creatinine (umol/L)","Max. urea (mmol/L)","Min. urine volume (mL/day)","Max. urine RBC count (RBC/HPF)","Max. urine WBC count (WBC/HPF)","Proteinuria","AST on admission (U/L)","ALT on admission (U/L)","GGT on admission (U/L)")]
+patients_dataset_num<-patients_dataset[,.SD,.SDcols=c("Patient ID","Age","Length of hospitalization (days)","Acute-phase serum NT-proBNP (ng/L)","Convalescent-phase serum NT-proBNP (ng/L)","Acute-phase urine NT-proBNP (ng/L)","Acute-phase serum endothelin-1 (pg/mL)","Convalescent-phase serum endothelin-1 (pg/mL)","Acute-phase urine endothelin-1 (pg/mL)","Convalescent-phase urine endothelin-1 (pg/mL)","Acute-phase serum lipocalin-2 (ng/mL)","Convalescent-phase serum lipocalin-2 (ng/mL)","Acute-phase urine lipocalin-2 (ng/mL)","Convalescent-phase urine lipocalin-2 (ng/mL)","Max. serum RBC count (*10^12/L)","Max. sedimentation rate (mm/h)","Min. platelet count (10^9/L)","Max. serum WBC count (*10^9/L)","Max. CRP (mg/L)","Max. creatinine (umol/L)","Max. urea (mmol/L)","Min. urine volume (mL/day)","Max. urine RBC count (RBC/HPF)","Max. urine WBC count (WBC/HPF)","Proteinuria","AST on admission (U/L)","ALT on admission (U/L)","GGT on admission (U/L)")]
 
 
 
@@ -279,31 +279,31 @@ corrplot(cor_matrix_hosp, method="color",tl.col="black", tl.cex = 0.4,tl.srt=45,
 dev.off()
 
 
-patients_dataset_num$`Second serum NT-proBNP`<-NULL
-patients_dataset_num$`Second serum endothelin-1`<-NULL
-patients_dataset_num$`Second serum lipocalin-2`<-NULL
-patients_dataset_num$`Second urine endothelin-1`<-NULL
-patients_dataset_num$`Second urine lipocalin-2`<-NULL
+patients_dataset_num$`Convalescent-phase serum NT-proBNP`<-NULL
+patients_dataset_num$`Convalescent-phase serum endothelin-1`<-NULL
+patients_dataset_num$`Convalescent-phase serum lipocalin-2`<-NULL
+patients_dataset_num$`Convalescent-phase urine endothelin-1`<-NULL
+patients_dataset_num$`Convalescent-phase urine lipocalin-2`<-NULL
 patients_dataset_num$`ALT on admission`<-NULL
 patients_dataset_num$`GGT on admission`<-NULL
 
 
 
-all_bio_first<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("First",colnames(patients_dataset),value = T)]))
+all_bio_acute_phase<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("Acute-phase",colnames(patients_dataset),value = T)]))
 
 
 new_vec<-c()
 for(i in 1:nrow(patients_dataset)) {
-  new_vec<-c(new_vec,all_bio_first[i],all_bio_first[i+nrow(patients_dataset)],all_bio_first[i+2*nrow(patients_dataset)],all_bio_first[i+3*nrow(patients_dataset)],all_bio_first[i+4*nrow(patients_dataset)],all_bio_first[i+5*nrow(patients_dataset)])
+  new_vec<-c(new_vec,all_bio_acute_phase[i],all_bio_acute_phase[i+nrow(patients_dataset)],all_bio_acute_phase[i+2*nrow(patients_dataset)],all_bio_acute_phase[i+3*nrow(patients_dataset)],all_bio_acute_phase[i+4*nrow(patients_dataset)],all_bio_acute_phase[i+5*nrow(patients_dataset)])
 }
 
 
-patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("First serum NT-proBNP",nrow(patients_dataset)*6),rep("First urine NT-proBNP",nrow(patients_dataset)*6),rep("First serum endothelin-1",nrow(patients_dataset)*6),rep("First urine endothelin-1",nrow(patients_dataset)*6),rep("First serum lipocalin-2",nrow(patients_dataset)*6),rep("First urine lipocalin-2",nrow(patients_dataset)*6)),biomarker_2=rep(c("First serum NT-proBNP","First urine NT-proBNP","First serum endothelin-1","First urine endothelin-1","First serum lipocalin-2","First urine lipocalin-2"),nrow(patients_dataset)*6),value_1=rep(all_bio_first,1,each=6),value_2=rep(new_vec,6))
+patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("Acute-phase serum NT-proBNP",nrow(patients_dataset)*6),rep("Acute-phase urine NT-proBNP",nrow(patients_dataset)*6),rep("Acute-phase serum endothelin-1",nrow(patients_dataset)*6),rep("Acute-phase urine endothelin-1",nrow(patients_dataset)*6),rep("Acute-phase serum lipocalin-2",nrow(patients_dataset)*6),rep("Acute-phase urine lipocalin-2",nrow(patients_dataset)*6)),biomarker_2=rep(c("Acute-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum endothelin-1","Acute-phase urine endothelin-1","Acute-phase serum lipocalin-2","Acute-phase urine lipocalin-2"),nrow(patients_dataset)*6),value_1=rep(all_bio_acute_phase,1,each=6),value_2=rep(new_vec,6))
 patients_dataset_num_longer_bio[,value_1:=log(value_1+1)]
 patients_dataset_num_longer_bio[,value_2:=log(value_2+1)]
 
-patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
-patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("Acute-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum lipocalin-2","Acute-phase urine lipocalin-2","Acute-phase serum endothelin-1","Acute-phase urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("Acute-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum lipocalin-2","Acute-phase urine lipocalin-2","Acute-phase serum endothelin-1","Acute-phase urine endothelin-1"))]
 patients_dataset_num_longer_bio[,cate:=paste(biomarker_1,biomarker_2)]
 
 #SUPPLEMENTARY FIGURE 1
@@ -316,28 +316,29 @@ corr_bio<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
   theme(legend.position = "none") +
   scale_color_manual(values=c("indianred3","black","black","black","black","black","black","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
   theme(axis.title = element_blank())+
-  theme(axis.text = element_blank())
+  theme(axis.text = element_blank()) +
+  theme(strip.text = element_text(size = 7))
 
 corr_bio
 
 ggsave(corr_bio,filename = "corr_bio.png",width = 11,height = 9)
 
 
-all_bio_second<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("Second",colnames(patients_dataset),value = T)]))
+all_bio_convalescent_phase<-as.numeric(unlist(patients_dataset[,.SD,.SDcols=grep("Convalescent-phase",colnames(patients_dataset),value = T)]))
 
 
 new_vec<-c()
 for(i in 1:nrow(patients_dataset)) {
-  new_vec<-c(new_vec,all_bio_second[i],all_bio_second[i+nrow(patients_dataset)],all_bio_second[i+2*nrow(patients_dataset)],all_bio_second[i+3*nrow(patients_dataset)],all_bio_second[i+4*nrow(patients_dataset)])
+  new_vec<-c(new_vec,all_bio_convalescent_phase[i],all_bio_convalescent_phase[i+nrow(patients_dataset)],all_bio_convalescent_phase[i+2*nrow(patients_dataset)],all_bio_convalescent_phase[i+3*nrow(patients_dataset)],all_bio_convalescent_phase[i+4*nrow(patients_dataset)])
 }
 
 
-patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("Second serum NT-proBNP",nrow(patients_dataset)*5),rep("Second serum endothelin-1",nrow(patients_dataset)*5),rep("Second urine endothelin-1",nrow(patients_dataset)*5),rep("Second serum lipocalin-2",nrow(patients_dataset)*5),rep("Second urine lipocalin-2",nrow(patients_dataset)*5)),biomarker_2=rep(c("Second serum NT-proBNP","Second serum endothelin-1","Second urine endothelin-1","Second serum lipocalin-2","Second urine lipocalin-2"),nrow(patients_dataset)*5),value_1=rep(all_bio_second,1,each=5),value_2=rep(new_vec,5))
+patients_dataset_num_longer_bio<-data.table(biomarker_1=c(rep("Convalescent-phase serum NT-proBNP",nrow(patients_dataset)*5),rep("Convalescent-phase serum endothelin-1",nrow(patients_dataset)*5),rep("Convalescent-phase urine endothelin-1",nrow(patients_dataset)*5),rep("Convalescent-phase serum lipocalin-2",nrow(patients_dataset)*5),rep("Convalescent-phase urine lipocalin-2",nrow(patients_dataset)*5)),biomarker_2=rep(c("Convalescent-phase serum NT-proBNP","Convalescent-phase serum endothelin-1","Convalescent-phase urine endothelin-1","Convalescent-phase serum lipocalin-2","Convalescent-phase urine lipocalin-2"),nrow(patients_dataset)*5),value_1=rep(all_bio_convalescent_phase,1,each=5),value_2=rep(new_vec,5))
 patients_dataset_num_longer_bio[,value_1:=log(value_1+1)]
 patients_dataset_num_longer_bio[,value_2:=log(value_2+1)]
 
-patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("Second serum NT-proBNP","Second serum lipocalin-2","Second urine lipocalin-2","Second serum endothelin-1","Second urine endothelin-1"))]
-patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("Second serum NT-proBNP","Second serum lipocalin-2","Second urine lipocalin-2","Second serum endothelin-1","Second urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_1:=factor(biomarker_1,levels = c("Convalescent-phase serum NT-proBNP","Convalescent-phase serum lipocalin-2","Convalescent-phase urine lipocalin-2","Convalescent-phase serum endothelin-1","Convalescent-phase urine endothelin-1"))]
+patients_dataset_num_longer_bio[,biomarker_2:=factor(biomarker_2,levels = c("Convalescent-phase serum NT-proBNP","Convalescent-phase serum lipocalin-2","Convalescent-phase urine lipocalin-2","Convalescent-phase serum endothelin-1","Convalescent-phase urine endothelin-1"))]
 patients_dataset_num_longer_bio[,cat:=paste(biomarker_1,biomarker_2)]
 
 
@@ -349,7 +350,8 @@ corr_bio2<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
   facet_grid(biomarker_2~biomarker_1,scales="free") +
   geom_smooth(method = "lm",color="black",size=0.75,se=F) +
   theme(axis.title = element_blank())+
-  theme(axis.text = element_blank())
+  theme(axis.text = element_blank()) +
+  theme(strip.text = element_text(size = 7))
 
 corr_bio2
 
@@ -362,13 +364,13 @@ patients_dataset_num_cp<-cbind(patients_dataset_num,patients_dataset$Gender,pati
 patients_dataset_num_longer<-melt(data=patients_dataset_num,measure.vars =  c("Hospitalization length","Max. serum RBC count ","Max. sedimentation rate","Min. platelet count","Max. serum WBC count","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC count ","Max. urine WBC count","Proteinuria"),variable.name = "category",value.name = "category_value" )
 
 
-patients_dataset_num_longer2<-melt(data=patients_dataset_num_longer,measure.vars=c("First serum NT-proBNP","First urine NT-proBNP","First serum endothelin-1","First urine endothelin-1","First serum lipocalin-2","First urine lipocalin-2"),variable.name="biomarker",value.name = "biomarker_value")
+patients_dataset_num_longer2<-melt(data=patients_dataset_num_longer,measure.vars=c("Acute-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum endothelin-1","Acute-phase urine endothelin-1","Acute-phase serum lipocalin-2","Acute-phase urine lipocalin-2"),variable.name="biomarker",value.name = "biomarker_value")
 
 
 patients_dataset_num_longer2<-merge(patients_dataset_num_longer2,patients_dataset[,.SD,.SDcols=c("Patient ID","Disease severity")])
 patients_dataset_num_longer2[,category:=factor(category,levels = c("Hospitalization length","Max. serum RBC count ","Min. platelet count","Max. sedimentation rate","Max. serum WBC count","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC count ","Max. urine WBC count","Proteinuria"))]
 
-patients_dataset_num_longer2[,biomarker:=factor(biomarker,levels = c("First serum NT-proBNP","First urine NT-proBNP","First serum lipocalin-2","First urine lipocalin-2","First serum endothelin-1","First urine endothelin-1"))]
+patients_dataset_num_longer2[,biomarker:=factor(biomarker,levels = c("Acute-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum lipocalin-2","Acute-phase urine lipocalin-2","Acute-phase serum endothelin-1","Acute-phase urine endothelin-1"))]
 patients_dataset_num_longer2[,category_value:=log(category_value+0.1)]
 patients_dataset_num_longer2[,biomarker_value:=log(biomarker_value+0.1)]
 patients_dataset_num_longer2[,cate:=paste(category,biomarker,sep="_")]
@@ -386,7 +388,9 @@ corr_facet<-ggplot(data=patients_dataset_num_longer2,aes(x=category_value,y=biom
   theme(legend.position = "none") +
   scale_color_brewer(palette = "YlOrRd",name="Disease severity",labels=c("Mild","Intermediate","Severe")) +
   theme(axis.title = element_blank())+
-  theme(axis.text = element_blank())
+  theme(axis.text = element_blank()) +
+  theme(strip.text = element_text(size = 7))
+  
 
 corr_facet
 
@@ -395,7 +399,7 @@ ggsave(corr_facet,filename = "corr2_facet.png",width = 17,height = 10)
 
 patients_dataset_num_cp<-patients_dataset_num_cp[1:28]
 patients_dataset_num_cp[,2:21]<-log(patients_dataset_num_cp[,2:21]+1)
-patients_dataset_num_cp<-patients_dataset_num_cp[is.na(`First serum lipocalin-2`)==F]
+patients_dataset_num_cp<-patients_dataset_num_cp[is.na(`Acute-phase serum lipocalin-2`)==F]
 #Multiple linear regression - hospitalization length
 linear_model_hosp<-regsubsets(`Hospitalization length`~.,data=patients_dataset_num_cp[,c(-1,-16,-17,-18)],nvmax = 15)
 
@@ -406,13 +410,13 @@ data.frame(
   BIC = which.min(res.sum_hosp$bic)
 )
 
-linear_model_hosp_sub_seven<-lm(`Hospitalization length`~`First serum NT-proBNP`+`First serum endothelin-1`+`Max. serum RBC count `+`Max. sedimentation rate`+`Max. serum WBC count`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
+linear_model_hosp_sub_seven<-lm(`Hospitalization length`~`Acute-phase serum NT-proBNP`+`Acute-phase serum endothelin-1`+`Max. serum RBC count `+`Max. sedimentation rate`+`Max. serum WBC count`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
 
 summary(linear_model_hosp_sub_seven)
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_hosp_seven<-model.matrix(`Hospitalization length`~`First serum NT-proBNP`+`First serum endothelin-1`+`Max. serum RBC count `+`Max. sedimentation rate`+`Min. platelet count`+`Max. serum WBC count`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
+x_hosp_seven<-model.matrix(`Hospitalization length`~`Acute-phase serum NT-proBNP`+`Acute-phase serum endothelin-1`+`Max. serum RBC count `+`Max. sedimentation rate`+`Min. platelet count`+`Max. serum WBC count`+`Max. creatinine`+V2,data=patients_dataset_num_cp)
 y_hosp_seven<-patients_dataset_num_cp$`Hospitalization length`
 
 linear_model_hosp_sub_seven$x<-x_hosp_seven
@@ -420,7 +424,7 @@ linear_model_hosp_sub_seven$y<-y_hosp_seven
 
 
 
-hosp_seven_cv<-mean(replicate(10,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
+hosp_seven_cv<-mean(replicate(100,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
 
 
 
@@ -440,14 +444,14 @@ data.frame(
 
 
 
-linear_model_chreatinine_sub_five<-lm(`Max. creatinine`~`Max. serum RBC count `+`First serum lipocalin-2`+`Max. sedimentation rate`+`First urine lipocalin-2` + `Max. urine WBC count` ,data=patients_dataset_num_cp)
+linear_model_chreatinine_sub_five<-lm(`Max. creatinine`~`Max. serum RBC count `+`Acute-phase serum lipocalin-2`+`Max. sedimentation rate`+`Acute-phase urine lipocalin-2` + `Max. urine WBC count` ,data=patients_dataset_num_cp)
 
 summary(linear_model_chreatinine_sub_five)
 
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_chr_five<-model.matrix(`Max. creatinine`~`Max. serum RBC count `+`First serum lipocalin-2`+`Max. sedimentation rate`+`First urine lipocalin-2` + `Max. urine WBC count`,data=patients_dataset_num_cp)
+x_chr_five<-model.matrix(`Max. creatinine`~`Max. serum RBC count `+`Acute-phase serum lipocalin-2`+`Max. sedimentation rate`+`Acute-phase urine lipocalin-2` + `Max. urine WBC count`,data=patients_dataset_num_cp)
 y_chr_five<-patients_dataset_num_cp$`Max. creatinine`
 
 linear_model_chreatinine_sub_five$x<-x_chr_five
@@ -455,12 +459,12 @@ linear_model_chreatinine_sub_five$y<-y_chr_five
 
 
 
-chr_five_cv<-mean(replicate(10,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
+chr_five_cv<-mean(replicate(100,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
 
 
 #Multiple linear regression - urine NT-proBNP
 
-linear_model_NT_proBNP<-regsubsets(`First urine NT-proBNP`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
+linear_model_NT_proBNP<-regsubsets(`Acute-phase urine NT-proBNP`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
 
 
 res.sum_NT_proBNP <- summary(linear_model_NT_proBNP)
@@ -472,26 +476,26 @@ data.frame(
 
 
 
-linear_model_NT_proBNP_sub_four<-lm(`First urine NT-proBNP`~`First serum NT-proBNP`+`First urine lipocalin-2`+`Max. serum RBC count `+`Max. serum WBC count`,data=patients_dataset_num_cp)
+linear_model_NT_proBNP_sub_four<-lm(`Acute-phase urine NT-proBNP`~`Acute-phase serum NT-proBNP`+`Acute-phase urine lipocalin-2`+`Max. serum RBC count `+`Max. serum WBC count`,data=patients_dataset_num_cp)
 
 summary(linear_model_NT_proBNP_sub_four)
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_NT_proBNP_four<-model.matrix(`First urine NT-proBNP`~`First serum NT-proBNP`+`First urine lipocalin-2`+`Max. serum RBC count `+`Max. serum WBC count`,data=patients_dataset_num_cp)
-y_NT_proBNP_four<-patients_dataset_num_cp$`First urine NT-proBNP`
+x_NT_proBNP_four<-model.matrix(`Acute-phase urine NT-proBNP`~`Acute-phase serum NT-proBNP`+`Acute-phase urine lipocalin-2`+`Max. serum RBC count `+`Max. serum WBC count`,data=patients_dataset_num_cp)
+y_NT_proBNP_four<-patients_dataset_num_cp$`Acute-phase urine NT-proBNP`
 
 linear_model_NT_proBNP_sub_four$x<-x_NT_proBNP_four
 linear_model_NT_proBNP_sub_four$y<-y_NT_proBNP_four
 
 
 
-pro_four_cv<-mean(replicate(10,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
+pro_four_cv<-mean(replicate(100,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
 
 #Multiple linear regression - urine lipocalin-2
 
 
-linear_model_lipocalin_2<-regsubsets(`First urine lipocalin-2`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 20)
+linear_model_lipocalin_2<-regsubsets(`Acute-phase urine lipocalin-2`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 20)
 
 
 res.sum_lipo <- summary(linear_model_lipocalin_2)
@@ -503,26 +507,26 @@ data.frame(
 
 
 
-linear_model_lipo_sub_five<-lm(`First urine lipocalin-2`~`First serum NT-proBNP`+`First urine NT-proBNP`+`Max. serum WBC count` +`Max. creatinine`+`Max. urine WBC count`,data=patients_dataset_num_cp)
+linear_model_lipo_sub_five<-lm(`Acute-phase urine lipocalin-2`~`Acute-phase serum NT-proBNP`+`Acute-phase urine NT-proBNP`+`Max. serum WBC count` +`Max. creatinine`+`Max. urine WBC count`,data=patients_dataset_num_cp)
 
 summary(linear_model_lipo_sub_five)
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_lipo_five<-model.matrix(`First urine lipocalin-2`~`First serum NT-proBNP`+`First urine NT-proBNP`+`Max. serum WBC count` +`Max. creatinine`+`Max. urine WBC count`,data=patients_dataset_num_cp)
-y_lipo_five<-patients_dataset_num_cp$`First urine lipocalin-2`
+x_lipo_five<-model.matrix(`Acute-phase urine lipocalin-2`~`Acute-phase serum NT-proBNP`+`Acute-phase urine NT-proBNP`+`Max. serum WBC count` +`Max. creatinine`+`Max. urine WBC count`,data=patients_dataset_num_cp)
+y_lipo_five<-patients_dataset_num_cp$`Acute-phase urine lipocalin-2`
 
 linear_model_lipo_sub_five$x<-x_lipo_five
 linear_model_lipo_sub_five$y<-y_lipo_five
 
 
-lipo_five_cv<-mean(replicate(10,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
+lipo_five_cv<-mean(replicate(100,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
 
 #Multiple linear regression - urine endothelin-1
 
 
 
-linear_model_endothelin<-regsubsets(`First urine endothelin-1`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
+linear_model_endothelin<-regsubsets(`Acute-phase urine endothelin-1`~.,data=patients_dataset_num_cp[,c(-1,-3,-16,-17,-18)],nvmax = 15)
 
 
 res.sum_endo <- summary(linear_model_endothelin)
@@ -533,21 +537,21 @@ data.frame(
 )
 
 
-linear_model_endo_sub_two<-lm(`First urine endothelin-1`~`Max. sedimentation rate`+`First urine lipocalin-2`,data=patients_dataset_num_cp)
+linear_model_endo_sub_two<-lm(`Acute-phase urine endothelin-1`~`Max. urine WBC count (WBC/HPF)`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
 
 summary(linear_model_endo_sub_two)
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_endo_two<-model.matrix(`First urine endothelin-1`~`Max. sedimentation rate`+`First urine lipocalin-2`,data=patients_dataset_num_cp)
-y_endo_two<-patients_dataset_num_cp$`First urine endothelin-1`
+x_endo_two<-model.matrix(`Acute-phase urine endothelin-1`~`Max. urine WBC count (WBC/HPF)`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
+y_endo_two<-patients_dataset_num_cp$`Acute-phase urine endothelin-1`
 
 linear_model_endo_sub_two$x<-x_endo_two
 linear_model_endo_sub_two$y<-y_endo_two
 
 
 
-endo_two_cv<-mean(replicate(10,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
+endo_two_cv<-mean(replicate(100,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
 
 
 ```
