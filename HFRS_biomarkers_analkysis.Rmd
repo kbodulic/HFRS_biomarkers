@@ -142,9 +142,9 @@ theme_bw() +
   theme(plot.title = element_text(hjust=0.5,size=11)) +
     scale_fill_brewer(palette = "Dark2",direction = -1) +
   scale_color_brewer(palette = "Dark2",direction = -1)  +
-       stat_compare_means(comparisons = my_comparisons, label.y = c(9500, 9800, 9300),label = "p.signif") +
+       stat_compare_means(comparisons = my_comparisons, label.y = c(9500, 10400, 9300),label = "p.signif") +
   theme(axis.title.y = element_text(size=9)) +
-  ylim(c(0,10500)) +
+  ylim(c(0,10900)) +
    scale_x_discrete(labels=c("Acute","Convalescent","Control"))
   
     
@@ -229,11 +229,11 @@ plots_combined2<-plot_grid(probnp_serum_urine, lipo_serum_urine, endo_serum_urin
 
  ggsave(plots_combined2,filename = "plots_combined2.png",height = 3,width = 6)
  
-patients_dataset_num<-patients_dataset[,.SD,.SDcols=c("Patient ID","Age","Length of hospitalization (days)","Acute-phase serum NT-proBNP (ng/L)","Convalescent-phase serum NT-proBNP (ng/L)","Acute-phase urine NT-proBNP (ng/L)","Acute-phase serum endothelin-1 (pg/mL)","Convalescent-phase serum endothelin-1 (pg/mL)","Acute-phase urine endothelin-1 (pg/mL)","Convalescent-phase urine endothelin-1 (pg/mL)","Acute-phase serum lipocalin-2 (ng/mL)","Convalescent-phase serum lipocalin-2 (ng/mL)","Acute-phase urine lipocalin-2 (ng/mL)","Convalescent-phase urine lipocalin-2 (ng/mL)","Max. serum RBC count (*10^12/L)","Max. sedimentation rate (mm/h)","Min. platelet count (10^9/L)","Max. serum WBC count (*10^9/L)","Max. CRP (mg/L)","Max. creatinine (umol/L)","Max. urea (mmol/L)","Min. urine volume (mL/day)","Max. urine RBC count (RBC/HPF)","Max. urine WBC count (WBC/HPF)","Proteinuria","AST on admission (U/L)","ALT on admission (U/L)","GGT on admission (U/L)")]
+patients_dataset_num<-patients_dataset[,.SD,.SDcols=c("Patient ID","Age","Length of hospitalization (days)","Acute-phase serum NT-proBNP (ng/L)","Convalescent-phase serum NT-proBNP (ng/L)","Acute-phase urine NT-proBNP (ng/L)","Acute-phase serum endothelin-1 (pg/mL)","Convalescent-phase serum endothelin-1 (pg/mL)","Acute-phase urine endothelin-1 (pg/mL)","Convalescent-phase urine endothelin-1 (pg/mL)","Acute-phase serum lipocalin-2 (ng/mL)","Convalescent-phase serum lipocalin-2 (ng/mL)","Acute-phase urine lipocalin-2 (ng/mL)","Convalescent-phase urine lipocalin-2 (ng/mL)","Max. serum RBC count (*10^12/L)","Max. sedimentation rate (mm/h)","Min. platelet count (10^9/L)","Max. serum WBC count (*10^9/L)","Max. CRP (mg/L)","Max. creatinine (umol/L)","Max. urea (mmol/L)","Min. urine volume (mL/day)","Max. urine RBC count (RBC/HPF)","Max. urine WBC count (WBC/HPF)","Proteinuria")]
 
 
 
-setnames(patients_dataset_num,c("Patient ID","Age","Hospitalization length","Acute-phase serum NT-proBNP","Convalescent-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum endothelin-1","Convalescent-phase serum endothelin-1","Acute-phase urine endothelin-1","Convalescent-phase urine endothelin-1","Acute-phase serum lipocalin-2","Convalescent-phase serum lipocalin-2","Acute-phase urine lipocalin-2","Convalescent-phase urine lipocalin-2","Max. serum RBC count ","Max. sedimentation rate","Min. platelet count","Max. serum WBC count","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC count ","Max. urine WBC count","Proteinuria","AST on admission","ALT on admission","GGT on admission"))
+setnames(patients_dataset_num,c("Patient ID","Age","Hospitalization length","Acute-phase serum NT-proBNP","Convalescent-phase serum NT-proBNP","Acute-phase urine NT-proBNP","Acute-phase serum endothelin-1","Convalescent-phase serum endothelin-1","Acute-phase urine endothelin-1","Convalescent-phase urine endothelin-1","Acute-phase serum lipocalin-2","Convalescent-phase serum lipocalin-2","Acute-phase urine lipocalin-2","Convalescent-phase urine lipocalin-2","Max. serum RBC count ","Max. sedimentation rate","Min. platelet count","Max. serum WBC count","Max. CRP","Max. creatinine","Max. urea","Min. urine volume","Max. urine RBC count ","Max. urine WBC count","Proteinuria"))
 
 
 cor_matrix_hosp<-cor(patients_dataset_num[,-1],use = "complete.obs",method="spearman")
@@ -266,7 +266,7 @@ p.mat_two[3:13,3:13]<-p.mat_one
 
 pval_adj_all<-p.adjust(p.mat_two,method = "BH")
 
-p.mat<-matrix(pval_adj_all,nrow=27,ncol=27)
+p.mat<-matrix(pval_adj_all,nrow=24,ncol=24)
 rownames(p.mat)<-rownames(cor_matrix_hosp)
 colnames(p.mat)<-colnames(cor_matrix_hosp)
 
@@ -274,7 +274,7 @@ colnames(p.mat)<-colnames(cor_matrix_hosp)
 #FIGURE 2
 
 pdf(file = "corr_matrix_clin.pdf")
-corrplot(cor_matrix_hosp, method="color",tl.col="black", tl.cex = 0.4,tl.srt=45,diag=F,number.cex = 0.4,addCoef.col = "grey20",col=col,p.mat = p.mat,insig="blank",type="upper")
+corrplot(cor_matrix_hosp, method="color",tl.col="black", tl.cex = 0.45,tl.srt=45,diag=F,number.cex = 0.45,addCoef.col = "grey20",col=col,p.mat = p.mat,insig="blank",type="upper")
 
 dev.off()
 
@@ -314,7 +314,7 @@ corr_bio<-ggplot(patients_dataset_num_longer_bio,aes(x=value_1,y=value_2)) +
   facet_grid(biomarker_2~biomarker_1,scales="free") +
   geom_smooth(method = "lm",aes(x=value_1,y=value_2,color=cate),size=0.75,se=F) +
   theme(legend.position = "none") +
-  scale_color_manual(values=c("indianred3","black","black","black","black","black","black","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
+  scale_color_manual(values=c("indianred3","indianred3","black","black","black","black","black","indianred3","black","black","black","indianred3","black","black","indianred3","black","black","indianred3","black","black","black","indianred3","black","black","black","black","black","black","indianred3","indianred3","black","indianred3","indianred3","black","indianred3","indianred3"),labels=c("Significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Non-significant","Significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Non-significant","Significant","Significant","Non-significant","Significant","Significant","Non-significant","Non-significant","Significant")) +
   theme(axis.title = element_blank())+
   theme(axis.text = element_blank()) +
   theme(strip.text = element_text(size = 7))
@@ -380,7 +380,7 @@ patients_dataset_num_longer2[,cate:=paste(category,biomarker,sep="_")]
 patients_dataset_num_longer2[,`Disease severity`:=factor(`Disease severity`,levels=c("1","2","3"))]
 corr_facet<-ggplot(data=patients_dataset_num_longer2,aes(x=category_value,y=biomarker_value)) +
   geom_smooth(method = "lm",size=0.75,se=F,aes(color=cate)) +
-  scale_color_manual(values=c("black","black","black","black","black","black","black","dodgerblue","black","black","black","black","black",rep("black",5),"black","black","black","dodgerblue","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","dodgerblue","black","black","dodgerblue","black","black","black","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue",rep("black",6))) +
+  scale_color_manual(values=c("black","black","black","black","black","black","black","dodgerblue","black","black","black","dodgerblue","black","black","black","black","black","black","black","black","black","dodgerblue","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","dodgerblue","black","black","dodgerblue","dodgerblue","black","black","black","black","black","black","black","black","dodgerblue","black","dodgerblue","dodgerblue","black","black","black","black","black","black","black","black","black","black","dodgerblue","dodgerblue","black","black","black","black","black","dodgerblue")) +
   new_scale_color() +
   geom_point(data=patients_dataset_num_longer2,size=1.8,aes(color=`Disease severity`)) +
   theme_bw() +
@@ -398,7 +398,7 @@ ggsave(corr_facet,filename = "corr2_facet.png",width = 17,height = 10)
 
 
 patients_dataset_num_cp<-patients_dataset_num_cp[1:28]
-patients_dataset_num_cp[,2:21]<-log(patients_dataset_num_cp[,2:21]+1)
+patients_dataset_num_cp[,2:18]<-log(patients_dataset_num_cp[,2:18]+1)
 patients_dataset_num_cp<-patients_dataset_num_cp[is.na(`Acute-phase serum lipocalin-2`)==F]
 #Multiple linear regression - hospitalization length
 linear_model_hosp<-regsubsets(`Hospitalization length`~.,data=patients_dataset_num_cp[,c(-1,-16,-17,-18)],nvmax = 15)
@@ -424,7 +424,7 @@ linear_model_hosp_sub_seven$y<-y_hosp_seven
 
 
 
-hosp_seven_cv<-mean(replicate(100,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
+hosp_seven_cv<-mean(replicate(1,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
 
 
 
@@ -459,7 +459,7 @@ linear_model_chreatinine_sub_five$y<-y_chr_five
 
 
 
-chr_five_cv<-mean(replicate(100,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
+chr_five_cv<-mean(replicate(1,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
 
 
 #Multiple linear regression - urine NT-proBNP
@@ -490,7 +490,7 @@ linear_model_NT_proBNP_sub_four$y<-y_NT_proBNP_four
 
 
 
-pro_four_cv<-mean(replicate(100,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
+pro_four_cv<-mean(replicate(1,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
 
 #Multiple linear regression - urine lipocalin-2
 
@@ -520,7 +520,7 @@ linear_model_lipo_sub_five$x<-x_lipo_five
 linear_model_lipo_sub_five$y<-y_lipo_five
 
 
-lipo_five_cv<-mean(replicate(100,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
+lipo_five_cv<-mean(replicate(1,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
 
 #Multiple linear regression - urine endothelin-1
 
@@ -537,13 +537,13 @@ data.frame(
 )
 
 
-linear_model_endo_sub_two<-lm(`Acute-phase urine endothelin-1`~`Max. urine WBC count (WBC/HPF)`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
+linear_model_endo_sub_two<-lm(`Acute-phase urine endothelin-1`~`Max. urine WBC count`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
 
 summary(linear_model_endo_sub_two)
 
 #Methodology for choosing the best model - only the best model is shown
 
-x_endo_two<-model.matrix(`Acute-phase urine endothelin-1`~`Max. urine WBC count (WBC/HPF)`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
+x_endo_two<-model.matrix(`Acute-phase urine endothelin-1`~`Max. urine WBC count`+`Acute-phase urine lipocalin-2`,data=patients_dataset_num_cp)
 y_endo_two<-patients_dataset_num_cp$`Acute-phase urine endothelin-1`
 
 linear_model_endo_sub_two$x<-x_endo_two
@@ -551,7 +551,7 @@ linear_model_endo_sub_two$y<-y_endo_two
 
 
 
-endo_two_cv<-mean(replicate(100,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
+endo_two_cv<-mean(replicate(1,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
 
 
 ```
