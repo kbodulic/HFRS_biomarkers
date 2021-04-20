@@ -424,7 +424,7 @@ linear_model_hosp_sub_seven$y<-y_hosp_seven
 
 
 
-hosp_seven_cv<-mean(replicate(1,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
+hosp_seven_cv<-mean(replicate(100,cv.lm(linear_model_hosp_sub_seven,k=10)$MSE$mean))
 
 
 
@@ -459,7 +459,7 @@ linear_model_chreatinine_sub_five$y<-y_chr_five
 
 
 
-chr_five_cv<-mean(replicate(1,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
+chr_five_cv<-mean(replicate(100,cv.lm(linear_model_chreatinine_sub_five,k=10)$MSE$mean))
 
 
 #Multiple linear regression - urine NT-proBNP
@@ -490,7 +490,7 @@ linear_model_NT_proBNP_sub_four$y<-y_NT_proBNP_four
 
 
 
-pro_four_cv<-mean(replicate(1,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
+pro_four_cv<-mean(replicate(100,cv.lm(linear_model_NT_proBNP_sub_four,k=10)$MSE$mean))
 
 #Multiple linear regression - urine lipocalin-2
 
@@ -520,7 +520,7 @@ linear_model_lipo_sub_five$x<-x_lipo_five
 linear_model_lipo_sub_five$y<-y_lipo_five
 
 
-lipo_five_cv<-mean(replicate(1,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
+lipo_five_cv<-mean(replicate(100,cv.lm(linear_model_lipo_sub_five,k=10)$MSE$mean))
 
 #Multiple linear regression - urine endothelin-1
 
@@ -551,7 +551,7 @@ linear_model_endo_sub_two$y<-y_endo_two
 
 
 
-endo_two_cv<-mean(replicate(1,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
+endo_two_cv<-mean(replicate(100,cv.lm(linear_model_endo_sub_two,k=10)$MSE$mean))
 
 
 ```
